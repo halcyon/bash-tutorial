@@ -1,0 +1,589 @@
+#+TITLE: bash-tutorial
+#+DATE: <2020-04-28 Tue>
+#+AUTHOR: Scott McLeod
+* What is a shell?
+#+BEGIN_QUOTE
+A Unix shell is a command-line interpreter or shell that provides a
+command line user interface for Unix-like operating systems. The
+shell is both an interactive command language and a scripting
+language, and is used by the operating system to control the
+execution of the system using shell scripts. Users typically
+interact with a Unix shell using a terminal emulator; however,
+direct operation via serial hardware connections or Secure Shell are
+common for server systems.
+#+END_QUOTE
+
+- All Unix shells provide:
+  - filename wildcarding (globbing)
+  - piping
+  - here documents
+  - command substitution
+  - variables
+  - control structures for condition-testing and iteration.
+
+- Why bother with shell?
+  - Git
+    #+BEGIN_QUOTE
+    Git was designed as a set of programs written in C and several
+    shell scripts that provide wrappers around those programs.
+    Although most of those scripts have since been rewritten in C for
+    speed and portability, the design remains, and it is easy to
+    chain the components together.
+    #+END_QUOTE
+  - Homebrew
+  - RVM
+  - run control scripts
+  - job control
+  - batch processing
+  - deployment
+
+- There are a lot of different shells
+  - csh (C Shell)
+  - ksh (Korn shell)
+  - sh (Bourne shell)
+    #+BEGIN_QUOTE
+    Bill Joy, the author of the C shell, criticized the Bourne shell as
+    being unfriendly for interactive use, a task for which Stephen Bourne
+    himself acknowledged C shell's superiority. Bourne stated, however,
+    that his shell was superior for scripting and was available on any
+    Unix system, and Tom Christiansen also criticized C shell as being
+    unsuitable for scripting and programming.
+    #+END_QUOTE
+  - tcsh
+  - bash (Bourne-Again shell) developed in 1989 for the GNU project
+    and incorporates features from the Bourne shell, csh, and ksh. It
+    is meant to be POSIX-compliant.
+  - zsh (Z shell) - an extended Bourne shell
+  - fish
+
+- shells provides built-ins and allows for command execution.
+  - The following are *not* built-ins
+    - awk
+    - sed
+    - head
+    - tail
+    - jq
+    - sort
+    - split
+    - stat
+    - seq
+
+* Variable Declaration
+- declare [-aAfFgilnrtux]
+  - a
+    - Each name is an indexed array variable
+  - A
+    - Each name is an associative array variable
+  - f
+    - Use function names only.
+  - i
+    - The variable is treated as an integer; arithmetic evaluation is
+      performed when the variable is assigned a value.
+  - l
+    - When the variable is assigned a value, all upper-case characters
+      are converted to lower-case.  The upper-case attribute is
+      disabled.
+  - n
+    - Give each name the nameref attribute, making it a name reference
+      to another variable.  That other variable is defined by the
+      value of name.  All references, assignments, and attribute
+      modifications to name, except those using or changing the -n
+      attribute itself, are performed on the variable referenced by
+      name's value.  The nameref attribute cannot be applied to array
+      variables.
+  - r
+    - Make names readonly.  These names cannot then be assigned values
+      by subsequent assignment statements or unset.
+  - t
+    - Give each name the trace attribute.  Traced functions inherit
+      the DEBUG and RETURN traps from the calling shell.  The trace
+      attribute has no special meaning for variables.
+  - u
+    - When the variable is assigned a value, all lower-case characters
+      are converted to upper-case.  The lower-case attribute is
+      disabled.
+  - x
+    - Mark names for export to subsequent commands via the
+      environment.
+- local [-aAfFgilnrtux]
+  - It is an error to use local when not in a function
+
+* Truth
+- 0 is true
+- Everything else is false
+#+BEGIN_SRC bash
+% /usr/bin/true
+% echo $?
+0
+/usr/bin/false
+% echo $?
+1
+#+END_SRC
+
+#+BEGIN_QUOTE
+EXIT STATUS
+
+The exit status of an executed command is the value returned by the
+waitpid system call or equivalent function.  Exit statuses fall
+between 0 and 255, though, as explained below, the shell may use
+values above 125 specially.  Exit statuses from shell builtins and
+compound commands are also limited to this range.  Under certain
+circumstances, the shell will use special values to indicate specific
+failure modes.
+
+For the shell's purposes, a command which exits with a zero exit
+status has succeeded.  An exit status of zero indicates success.  A
+non-zero exit status indicates failure.  When a command terminates on
+a fatal signal N, bash uses the value of 128+N as the exit status.
+
+If a command is not found, the child process created to execute it
+returns a status of 127.  If a command is found but is not executable,
+the return status is 126.
+
+If a command fails because of an error during expansion or
+redirection, the exit status is greater than zero.
+
+Shell builtin commands return a status of 0 (true) if successful, and
+non-zero (false) if an error occurs while they execute.  All builtins
+return an exit status of 2 to indicate incorrect usage, generally
+invalid options or missing arguments.
+
+Bash itself returns the exit status of the last command executed,
+unless a syntax error occurs, in which case it exits with a non-zero
+value.  See also the exit builtin command below.
+#+END_QUOTE
+
+* Putting commands together
+- semicolon separates commands on the same line
+#+BEGIN_SRC bash
+% echo "ted"; echo "theo"; echo "bill"
+ted
+theo
+bill
+#+END_SRC
+
+- Logical Operators
+  - And (If the left operand of && is true, run the right operand - otherwise short circuit and return false)
+  #+BEGIN_SRC bash
+  % /usr/bin/true && /usr/bin/true && /usr/bin/true && echo "Every preceding command is true."
+  Every preceding command is true.
+  % /usr/bin/false && echo "boris" && /usr/bin/true && echo "Every preceding command is true."
+  %
+  #+END_SRC
+
+  - Or (If the left operand of || is false, run the right operand - otherwise short circuit and return true)
+  #+BEGIN_SRC bash
+  % /usr/bin/false || echo "boris"
+  boris
+  % /usr/bin/false && /usr/bin/true || /usr/bin/true && echo "What happened here?"
+  What happened here?
+  #+END_SRC
+
+* Line continuations
+#+BEGIN_SRC bash
+/usr/bin/true && /usr/bin/true && /usr/bin/true && echo "Every preceding command is true." \
+&& echo "Everything will be ok in the end. If it's not ok, it's not the end" \
+&& echo "preferable to stay under eighty characters. Should you need to go beyond" \
+&& echo "eighty characters, use the line continuation character."
+#+END_SRC
+
+- This doesn't work so well for strings
+
+* Strings
+- Strings are literal when it comes to line continuations
+- String expansion (interpolation)
+  #+BEGIN_SRC bash
+  my_fun_variable="The Ted"
+  echo "${my_fun_variable}"
+  The Ted
+  #+END_SRC
+- Double quote and single quote have different meanings
+  - Double quote is for string interpolation
+  - Single quote does not interpolate
+  - You may need quotes in your string.
+    - Quote your quotes
+    #+BEGIN_SRC bash
+    albert="\"Everything should be made as simple as possible, but no simpler.\" --Albert Einstein"
+    #+END_SRC
+    - Or nest your quotes depending on your needs
+    #+BEGIN_SRC bash
+      fred="This is 'totally' legal"
+      fred='is also "legal"'
+      an_interpolated_string="${my_fun_variable} is ${fred}"
+      fred="This is bill's bicycle"
+      unexpected='${maybe_i_need_a_string_that_looks_like_this}'
+    #+END_SRC
+  - "" is the null string
+
+* Variable Expansion
+  - Let's start with a simple string
+    #+BEGIN_SRC
+    ted="danson is a cool dude"
+    for i in $ted
+    do
+      echo ${i}
+    done
+    #+END_SRC
+    #+BEGIN_SRC
+    for i in "$ted"
+    do
+      echo ${i}
+    done
+    #+END_SRC
+  - The Internal Field Separator
+    ted="danson:is:a:cool:dude"
+    IFS=:
+    for i in $ted
+    do
+      echo ${i}
+    done
+  - Default IFS is <space><tab><newline>
+    #+BEGIN_SRC
+      read -r a b c d e <<<${ted}
+      echo "a: ${a}"
+      echo "b: ${b}"
+      echo "c: ${c}"
+      echo "d: ${d}"
+      echo "e: ${e}"
+    #+END_SRC
+  - #+BEGIN_SRC
+      fred="Expasions are useful"
+      echo ${#fred}
+  - #+END_SRC
+
+* Conditionals
+- Unix philosophy
+  - Do one thing, and do it well!
+  - Composability
+  - Everything is a file (Plan 9 from Bell Labs extended this even
+    further - all network access and IPC is done through files)
+  - Use command to be able to tell if you are using a builtin
+    #+BEGIN_SRC bash
+      % command -V test
+      test is a shell builtin
+    #+END_SRC
+    - Another way to see that test is a builtin, and the alternatives available
+       #+BEGIN_SRC bash
+         % type -a test
+         test is a shell builtin
+         test is /usr/bin/test
+         test is /bin/test
+       #+END_SRC bash
+    - The alternatives are the same file
+       #+BEGIN_SRC bash
+         % ls -i /bin/test
+         27059349
+         % ls -i /usr/bin/test
+         27059349
+       #+END_SRC bash
+  - Test - do one thing and doing it well
+  - test - check file types and compare values
+      #+BEGIN_SRC
+      % /usr/bin/\[ --help                                                                                                                      !10051
+      Usage: test EXPRESSION
+        or:  test
+        or:  [ EXPRESSION ]
+        or:  [ ]
+        or:  [ OPTION
+      Exit with the status determined by EXPRESSION.
+
+            --help     display this help and exit
+            --version  output version information and exit
+
+      An omitted EXPRESSION defaults to false.  Otherwise,
+      EXPRESSION is true or false and sets exit status.  It is one of:
+
+        ( EXPRESSION )               EXPRESSION is true
+        ! EXPRESSION                 EXPRESSION is false
+        EXPRESSION1 -a EXPRESSION2   both EXPRESSION1 and EXPRESSION2 are true
+        EXPRESSION1 -o EXPRESSION2   either EXPRESSION1 or EXPRESSION2 is true
+
+        -n STRING            the length of STRING is nonzero
+        STRING               equivalent to -n STRING
+        -z STRING            the length of STRING is zero
+        STRING1 = STRING2    the strings are equal
+        STRING1 != STRING2   the strings are not equal
+
+        INTEGER1 -eq INTEGER2   INTEGER1 is equal to INTEGER2
+        INTEGER1 -ge INTEGER2   INTEGER1 is greater than or equal to INTEGER2
+        INTEGER1 -gt INTEGER2   INTEGER1 is greater than INTEGER2
+        INTEGER1 -le INTEGER2   INTEGER1 is less than or equal to INTEGER2
+        INTEGER1 -lt INTEGER2   INTEGER1 is less than INTEGER2
+        INTEGER1 -ne INTEGER2   INTEGER1 is not equal to INTEGER2
+
+        FILE1 -ef FILE2   FILE1 and FILE2 have the same device and inode numbers
+        FILE1 -nt FILE2   FILE1 is newer (modification date) than FILE2
+        FILE1 -ot FILE2   FILE1 is older than FILE2
+
+        -b FILE     FILE exists and is block special
+        -c FILE     FILE exists and is character special
+        -d FILE     FILE exists and is a directory
+        -e FILE     FILE exists
+        -f FILE     FILE exists and is a regular file
+        -g FILE     FILE exists and is set-group-ID
+        -G FILE     FILE exists and is owned by the effective group ID
+        -h FILE     FILE exists and is a symbolic link (same as -L)
+        -k FILE     FILE exists and has its sticky bit set
+        -L FILE     FILE exists and is a symbolic link (same as -h)
+        -O FILE     FILE exists and is owned by the effective user ID
+        -p FILE     FILE exists and is a named pipe
+        -r FILE     FILE exists and read permission is granted
+        -s FILE     FILE exists and has a size greater than zero
+        -S FILE     FILE exists and is a socket
+        -t FD       file descriptor FD is opened on a terminal
+        -u FILE     FILE exists and its set-user-ID bit is set
+        -w FILE     FILE exists and write permission is granted
+        -x FILE     FILE exists and execute (or search) permission is granted
+
+      Except for -h and -L, all FILE-related tests dereference symbolic links.
+      Beware that parentheses need to be escaped (e.g., by backslashes) for shells.
+      INTEGER may also be -l STRING, which evaluates to the length of STRING.
+
+      NOTE: Binary -a and -o are inherently ambiguous.  Use 'test EXPR1 && test
+      EXPR2' or 'test EXPR1 || test EXPR2' instead.
+
+      NOTE: [ honors the --help and --version options, but test does not.
+      test treats each of those as it treats any other nonempty STRING.
+
+      NOTE: your shell may have its own version of test and/or [, which usually supersedes
+      the version described here.  Please refer to your shell's documentation
+      for details about the options it supports.
+      #+END_SRC
+  - Using test
+    #+BEGIN_SRC bash
+      % [ 18 -eq 18 ]
+      % echo $?
+      0
+      % [ 19 -eq 18 ]
+      % echo $?
+      1
+    #+END_SRC
+  - Prefer use the bash builtin for string comparisons
+    #+BEGIN_SRC bash
+     [[ ... ]]
+    #+END_SRC
+    - Preferred over [ ... ], test, and /usr/bin/
+    - It reduces errors as no pathname expansion or word splitting
+      takes place between [[]]. In addition, [[]] allows for regular
+      expression matching, while [ … ] does not
+    #+BEGIN_SRC bash
+      % [[ 4 > 3 ]]
+      % echo $?
+      0
+      % [[ 22 > 3]]
+      % echo $?
+      1
+    #+END_SRC
+    - Avoid lexicographical integer comparisons by using (( .. ))
+
+    - Case
+      #+BEGIN_SRC bash :results output :exports both
+        team="yellow"
+        case "${team}" in
+          pur*) echo "Team is Purple!" ;;
+          blue) echo "Team is Blue!" ;;
+          red) echo "Team is Red!" ;;
+          *) echo "Unexpected color" ;;
+        esac
+      #+END_SRC
+
+      #+RESULTS:
+      : Unexpected color
+
+* Arrays
+  - Arrays are assigned to using compound assignments of the form name=(value1 ... valuen)
+    #+BEGIN_SRC bash
+      declare -a my_array
+      my_array=(1 2 3 4 5)
+    #+END_SRC
+  - ${#my_array[*]} expands to the integer length of the array
+  - ${my_array[*]} expands to one string, while ${my_array[@]} expands to a
+     string for each element
+    #+BEGIN_SRC bash :results output :exports both
+      declare -a my_array
+      my_array=(1 2 3 4 5)
+      for i in ${my_array[@]}
+      do
+        echo "${i}"
+      done
+     #+END_SRC
+
+     #+RESULTS:
+     | 1 |
+     | 2 |
+     | 3 |
+     | 4 |
+     | 5 |
+
+  - Indices
+    #+BEGIN_SRC bash :results output :exports both
+      declare -a my_array
+      my_array=(1 2 3 4 5)
+      my_array[8]="fred"
+      for i in ${!my_array[@]}
+      do echo "${i}"
+      done
+    #+END_SRC
+
+    #+RESULTS:
+    : 0
+    : 1
+    : 2
+    : 3
+    : 4
+    : 8
+
+   - String replacement
+     #+BEGIN_SRC bash :results output :exports both
+       duck_test="If it looks like a duck, swims like a duck, and quacks like a duck, then it probably is a duck."
+       echo "${duck_test//duck/rabbit}"
+     #+END_SRC
+
+     #+RESULTS:
+     : If it looks like a rabbit, swims like a rabbit, and quacks like a rabbit, then it probably is a rabbit.
+
+     #+BEGIN_SRC bash :results output :exports both
+       bubba_items=("shrimp-kabobs" "shrimp creole" "shrimp gumbo" \
+                                    "pineapple shrimp" "lemon shrimp" "coconut shrimp" \
+                                    "pepper shrimp" "shrimp soup" "shrimp stew" "shrimp salad" \
+                                    "shrimp and potatoes" "shrimp burger" "shrimp sandwich")
+       for i in "${bubba_items[@]//shrimp/rabbit}"
+       do
+         echo "${i}"
+       done
+     #+END_SRC
+
+     #+RESULTS:
+     #+begin_example
+     rabbit-kabobs
+     rabbit creole
+     rabbit gumbo
+     pineapple rabbit
+     lemon rabbit
+     coconut rabbit
+     pepper rabbit
+     rabbit soup
+     rabbit stew
+     rabbit salad
+     rabbit and potatoes
+     rabbit burger
+     rabbit sandwich
+     #+end_example
+
+  - Common mistakes
+    #+BEGIN_SRC bash
+      for i in "${my_array[@]}"
+      do
+        echo "${i}"
+      done
+
+      for i in ${my_array[*]}
+      do
+        echo "${i}"
+      done
+
+      for i in ${my_array}
+      do
+        echo "${i}"
+      done
+    #+END_SRC
+* String manipulation
+   - Substring
+     #+BEGIN_SRC bash :results output :exports both
+       string="YOUR-STRING"
+       echo ${string:0}
+       echo ${string:5}
+       echo ${string:3:3}
+    #+END_SRC
+
+    #+RESULTS:
+    : YOUR-STRING
+    : STRING
+    : R-S
+   - Chopping
+     #+BEGIN_SRC bash :results output :exports both
+       my_string="foodforthought.jpg"
+       echo ${my_string##*fo}
+       echo ${my_string#*fo}
+     #+END_SRC
+
+     #+RESULTS:
+     : rthought.jpg
+     : odforthought.jpg
+
+     #+BEGIN_SRC bash :results output :exports both
+       my_string="chickensoup.tar.gz"
+       echo ${my_string%%.*}
+       echo ${my_string%.*}
+     #+END_SRC
+
+     #+RESULTS:
+     : chickensoup
+     : chickensoup.tar
+
+   - Regexes
+     #+BEGIN_SRC bash :results output :exports both
+       url="https://api.adoptopenjdk.net/v3/assets/feature_releases/{15}/ga?architecture=x64&os=linux"
+       [[ "${url}" =~ \{([0-9]+)\} ]]
+       echo ${BASH_REMATCH[1]}
+     #+END_SRC
+
+     #+RESULTS:
+     : 15
+
+* Pipes
+  - Pipes
+    #+BEGIN_SRC bash :results output :exports both
+      echo "2^20" | bc
+    #+END_SRC
+
+    #+RESULTS:
+    : 1048576
+
+    #+BEGIN_SRC bash :results output :exports both
+      echo "2^8" | bc | sed -e 's/56/34/'
+      echo $?
+    #+END_SRC
+
+    #+RESULTS:
+    : 234
+    : 0
+
+    #+BEGIN_SRC bash :results output :exports both
+      echo "2^8" | false | true
+        echo $?
+    #+END_SRC
+
+    #+RESULTS:
+    : 0
+
+
+|-----------------+----------------------------------------|
+| Syntax          | Result                                 |
+|-----------------+----------------------------------------|
+| arr=()          | Create empty array                     |
+|-----------------+----------------------------------------|
+| arr=(1 2 3)     | Initialize array                       |
+|-----------------+----------------------------------------|
+| ${arr[2]}       | Retrieve third element                 |
+|-----------------+----------------------------------------|
+| ${arr[@]}       | Retrieve all elements                  |
+|-----------------+----------------------------------------|
+| ${!arr[@]}      | Retrieve array indices                 |
+|-----------------+----------------------------------------|
+| ${#arr[@]}      | Calculate array size                   |
+|-----------------+----------------------------------------|
+| arr[0]=3        | Overwrite 1st element                  |
+|-----------------+----------------------------------------|
+| arr+=(4)        | Append value(s)                        |
+|-----------------+----------------------------------------|
+| str=$(ls)       | Save ls output as string               |
+|-----------------+----------------------------------------|
+| arr=( $(ls) )   | Save ls output as array of files       |
+|-----------------+----------------------------------------|
+| ${arr[@]:s:n}   | Elements at indices n to s+n           |
+|-----------------+----------------------------------------|
+| ${str//ab/c}    | For a given string, replace ab with c  |
+|-----------------+----------------------------------------|
+| ${arr[@]//ab/c} | For each array item, replace ab with c |
+|-----------------+----------------------------------------|
