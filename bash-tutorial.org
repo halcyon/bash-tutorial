@@ -586,3 +586,11 @@ bill
 
     #+RESULTS:
     : 0
+
+    #+BEGIN_SRC bash :results output :exports both
+      echo "2^8" | false | false | true | false
+      echo "${PIPESTATUS[*]}"
+    #+END_SRC
+
+    #+RESULTS:
+    : 0 1 1 0 1
