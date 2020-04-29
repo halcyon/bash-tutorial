@@ -390,6 +390,26 @@ bill
       #+RESULTS:
       : Unexpected color
 
+      #+BEGIN_SRC bash :results output :exports both
+        team="green"
+        case "${team}" in
+          pur* | violet)
+            echo "Team is Purple!"
+            echo "Or maybe Violet.."
+            ;;
+          blue) echo "Team is Blue!" ;;
+          red) echo "Team is Red!" ;;
+          *) echo "Color not found!"
+             false
+             ;;
+        esac
+        echo "$?"
+      #+END_SRC
+
+      #+RESULTS:
+      : Color not found!
+      : 1
+
 * Arrays
   - Arrays are assigned to using compound assignments of the form name=(value1 ... valuen)
     #+BEGIN_SRC bash
