@@ -444,9 +444,9 @@ bill
 
      #+BEGIN_SRC bash :results output :exports both
        bubba_items=("shrimp-kabobs" "shrimp creole" "shrimp gumbo" \
-                                    "pineapple shrimp" "lemon shrimp" "coconut shrimp" \
-                                    "pepper shrimp" "shrimp soup" "shrimp stew" "shrimp salad" \
-                                    "shrimp and potatoes" "shrimp burger" "shrimp sandwich")
+                    "pineapple shrimp" "lemon shrimp" "coconut shrimp" \
+                    "pepper shrimp" "shrimp soup" "shrimp stew" "shrimp salad" \
+                    "shrimp and potatoes" "shrimp burger" "shrimp sandwich")
        for i in "${bubba_items[@]//shrimp/rabbit}"
        do
          echo "${i}"
@@ -487,6 +487,36 @@ bill
         echo "${i}"
       done
     #+END_SRC
+   - Summary
+     |-----------------+----------------------------------------|
+     | Syntax          | Result                                 |
+     |-----------------+----------------------------------------|
+     | arr=()          | Create empty array                     |
+     |-----------------+----------------------------------------|
+     | arr=(1 2 3)     | Initialize array                       |
+     |-----------------+----------------------------------------|
+     | ${arr[2]}       | Retrieve third element                 |
+     |-----------------+----------------------------------------|
+     | ${arr[@]}       | Retrieve all elements                  |
+     |-----------------+----------------------------------------|
+     | ${!arr[@]}      | Retrieve array indices                 |
+     |-----------------+----------------------------------------|
+     | ${#arr[@]}      | Calculate array size                   |
+     |-----------------+----------------------------------------|
+     | arr[0]=3        | Overwrite 1st element                  |
+     |-----------------+----------------------------------------|
+     | arr+=(4)        | Append value(s)                        |
+     |-----------------+----------------------------------------|
+     | str=$(ls)       | Save ls output as string               |
+     |-----------------+----------------------------------------|
+     | arr=( $(ls) )   | Save ls output as array of files       |
+     |-----------------+----------------------------------------|
+     | ${arr[@]:s:n}   | Elements at indices n to s+n           |
+     |-----------------+----------------------------------------|
+     | ${str//ab/c}    | For a given string, replace ab with c  |
+     |-----------------+----------------------------------------|
+     | ${arr[@]//ab/c} | For each array item, replace ab with c |
+     |-----------------+----------------------------------------|
 * String manipulation
    - Substring
      #+BEGIN_SRC bash :results output :exports both
@@ -556,34 +586,3 @@ bill
 
     #+RESULTS:
     : 0
-
-
-|-----------------+----------------------------------------|
-| Syntax          | Result                                 |
-|-----------------+----------------------------------------|
-| arr=()          | Create empty array                     |
-|-----------------+----------------------------------------|
-| arr=(1 2 3)     | Initialize array                       |
-|-----------------+----------------------------------------|
-| ${arr[2]}       | Retrieve third element                 |
-|-----------------+----------------------------------------|
-| ${arr[@]}       | Retrieve all elements                  |
-|-----------------+----------------------------------------|
-| ${!arr[@]}      | Retrieve array indices                 |
-|-----------------+----------------------------------------|
-| ${#arr[@]}      | Calculate array size                   |
-|-----------------+----------------------------------------|
-| arr[0]=3        | Overwrite 1st element                  |
-|-----------------+----------------------------------------|
-| arr+=(4)        | Append value(s)                        |
-|-----------------+----------------------------------------|
-| str=$(ls)       | Save ls output as string               |
-|-----------------+----------------------------------------|
-| arr=( $(ls) )   | Save ls output as array of files       |
-|-----------------+----------------------------------------|
-| ${arr[@]:s:n}   | Elements at indices n to s+n           |
-|-----------------+----------------------------------------|
-| ${str//ab/c}    | For a given string, replace ab with c  |
-|-----------------+----------------------------------------|
-| ${arr[@]//ab/c} | For each array item, replace ab with c |
-|-----------------+----------------------------------------|
