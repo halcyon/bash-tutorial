@@ -835,3 +835,33 @@ while both outputs are sent to the terminal.
 | cmd > >(cmd1) 2> >(cmd2)    | Send stdout of `cmd` to `cmd1` and stderr   |
 |                             | `cmd` to `cmd2`.                            |
 +-----------------------------'---------------------------------------------'
+
+* Misc
+  - Subshell for grouping: ( … ) does nothing but create a subshell
+     and wait for it to terminate). Contrast with { … } which groups
+     commands purely for syntactic purposes and does not create a
+     subshell.
+  - Background: … & creates a subshell and does not wait for it to
+     terminate.
+  - Pipeline: … | … creates two subshells, one for the left-hand side
+    and one for the right-hand side, and waits for both to
+    terminate. The shell creates a pipe and connects the left-hand
+    side's standard output to the write end of the pipe and the
+    right-hand side's standard input to the read end. In some shells
+    (ksh88, ksh93, zsh, bash with the lastpipe option set and
+    effective), the right-hand side runs in the original shell, so the
+    pipeline construct only creates one subshell.
+  - Command substitution: $(…) (also spelled `…`) creates a subshell
+    with its standard output set to a pipe, collects the output in the
+    parent and expands to that output, minus its trailing
+    newlines. (And the output may be further subject to splitting and
+    globbing, but that's another story.)
+  - Process substitution: <(…) creates a subshell with its standard
+    output set to a pipe and expands to the name of the pipe. The
+    parent (or some other process) may open the pipe to communicate
+    with the subshell. >(…) does the same but with the pipe on
+    standard input.
+  - Coprocess: coproc … creates a subshell and does not wait for it to
+    terminate. The subshell's standard input and output are each set
+    to a pipe with the parent being connected to the other end of each
+    pipe.
