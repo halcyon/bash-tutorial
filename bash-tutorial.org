@@ -836,6 +836,30 @@ while both outputs are sent to the terminal.
 |                             | `cmd` to `cmd2`.                            |
 +-----------------------------'---------------------------------------------'
 
+* Process substitution
+  - <(…) creates a subshell with its standard output set to a pipe and
+    expands to the name of the pipe. The parent (or some other
+    process) may open the pipe to communicate with the subshell. >(…)
+    does the same but with the pipe on standard input.
+    #+BEGIN_SRC bash :results output :exports both
+      diff -urN <(ls ~/.emacs.d/straight) <(ls ~/.emacs.d/elpa)
+    #+END_SRC
+  - Using the tee, wc and gzip commands that counts the lines in a file with wc -l and compresses it with gzip in one pass:
+    #+BEGIN_SRC bash :results output :exports both
+      tee >(wc -l >&2) < bigfile | gzip > bigfile.gz
+    #+END_SRC
+
+* Command Substitution
+  - Command substitution: $(…) (`…` is deprecated) creates a subshell
+    with its standard output set to a pipe, collects the output in the
+    parent and expands to that output, minus its trailing
+    newlines. (Output may be further subject to splitting and
+    globbing). Better than old style due to ability to nest.
+  -
+    #+BEGIN_SRC bash :results output :exports both
+      fred="$(ls -al $(cat "ted"))"
+    #+END_SRC
+
 * Misc
   - Subshell for grouping: ( … ) does nothing but create a subshell
      and wait for it to terminate). Contrast with { … } which groups
